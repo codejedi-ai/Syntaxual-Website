@@ -10,7 +10,7 @@ This example uses Docker's [`mcp/time`](https://hub.docker.com/r/mcp/time) image
 
 #### Service 1 (Web Server with UI)
 
-The web server and UI are built in Next.js (see `/service-1/src/app`). The web server includes a forwarding action to connect to the MCP Client. 
+The web server and UI are built in Next.js (see `/Syntaxual-Frontend/src/app`). The web server includes a forwarding action to connect to the MCP Client. 
 
 #### Service 2 (MCP Client and MCP Server)
 The [MCP Client](https://modelcontextprotocol.io/quickstart/client) is written in Python and ran in a `venv` virtual environment. The MCP server is provided by the Docker `mcp/time` image. The MCP Server communicates with the MCP Client in a [Quart](https://quart.palletsprojects.com/en/latest/index.html) app (i.e. Asynchronous Server Gateway Interface (ASGI) version of Flask) through the `stdio` transport method, as seen in `/service-2/main.py`. For more on MCP transport methods, see [here](https://modelcontextprotocol.io/docs/concepts/transports).

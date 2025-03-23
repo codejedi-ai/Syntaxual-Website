@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 36 33% 97%;
+    --foreground: 24 6% 15%;
+
+    --card: 36 33% 97%;
+    --card-foreground: 24 6% 15%;
+ 
+    --popover: 36 33% 97%;
+    --popover-foreground: 24 6% 15%;
+ 
+    --primary: 0 59% 51%;
+    --primary-foreground: 36 33% 97%;
+ 
+    --secondary: 33 23% 83%;
+    --secondary-foreground: 24 6% 15%;
+ 
+    --muted: 33 23% 83%;
+    --muted-foreground: 24 6% 40%;
+ 
+    --accent: 33 23% 83%;
+    --accent-foreground: 24 6% 15%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 36 33% 97%;
+
+    --border: 33 23% 83%;
+    --input: 33 23% 83%;
+    --ring: 0 59% 51%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 24 6% 15%;
+    --foreground: 36 33% 97%;
+ 
+    --card: 24 6% 15%;
+    --card-foreground: 36 33% 97%;
+ 
+    --popover: 24 6% 15%;
+    --popover-foreground: 36 33% 97%;
+ 
+    --primary: 0 59% 51%;
+    --primary-foreground: 36 33% 97%;
+ 
+    --secondary: 33 23% 17%;
+    --secondary-foreground: 36 33% 97%;
+ 
+    --muted: 33 23% 17%;
+    --muted-foreground: 33 23% 63%;
+ 
+    --accent: 33 23% 17%;
+    --accent-foreground: 36 33% 97%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 36 33% 97%;
+ 
+    --border: 33 23% 17%;
+    --input: 33 23% 17%;
+    --ring: 0 59% 51%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #181818;
+  --accent: #800080;
+  --text-primary: #E0E0E0;
+  --text-secondary: #A0A0A0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+}
+
+@layer components {
+  .syntaxual-button {
+    @apply bg-syntaxual-accent text-syntaxual-text-primary px-4 py-2 rounded-md hover:opacity-90 transition-opacity;
+  }
+  
+  .syntaxual-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .syntaxual-heading {
+    @apply text-syntaxual-accent font-bold;
+  }
+  
+  .syntaxual-card {
+    @apply bg-black bg-opacity-50 rounded-lg p-6 shadow-lg border border-syntaxual-accent border-opacity-20;
+  }
+}

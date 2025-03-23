@@ -1,7 +1,7 @@
 services:
-  service-1: # Web Server and UI
+  Syntaxual-Frontend: # Web Server and UI
     build:
-      context: ./service-1
+      context: ./Syntaxual-Frontend
       dockerfile: Dockerfile
     ports:
       - target: 3000

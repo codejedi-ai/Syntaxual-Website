@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #181818;
+  --accent: #800080;
+  --text-primary: #E0E0E0;
+  --text-secondary: #A0A0A0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+}
+
+@layer components {
+  .syntaxual-button {
+    @apply bg-syntaxual-accent text-syntaxual-text-primary px-4 py-2 rounded-md hover:opacity-90 transition-opacity;
+  }
+  
+  .syntaxual-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .syntaxual-heading {
+    @apply text-syntaxual-accent font-bold;
+  }
+  
+  .syntaxual-card {
+    @apply bg-black bg-opacity-50 rounded-lg p-6 shadow-lg border border-syntaxual-accent border-opacity-20;
+  }
+}
