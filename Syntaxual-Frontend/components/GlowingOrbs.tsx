@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './GlowingOrbs.module.css';
 
@@ -13,6 +13,8 @@ interface OrbProps {
   maxOpacity?: number;
   interactive?: boolean;
   focusPoint?: { x: number, y: number } | null;
+  codeThemed?: boolean;
+  density?: 'low' | 'medium' | 'high';
 }
 
 interface Orb {
@@ -25,17 +27,20 @@ interface Orb {
   duration: number;
   delay: number;
   scale: number;
+  type?: 'circle' | 'square' | 'diamond';
 }
 
 const GlowingOrbs: React.FC<OrbProps> = ({
-  count = 15,
-  colors = ['var(--accent)', '#9370db', '#ba55d3', '#9932cc', '#4b0082'],
-  minSize = 50,
-  maxSize = 200,
-  minOpacity = 0.1,
-  maxOpacity = 0.4,
+  count = 12,
+  colors = ['var(--accent)', 'var(--accent-secondary)', 'var(--accent-light)'],
+  minSize = 40,
+  maxSize = 180,
+  minOpacity = 0.08,
+  maxOpacity = 0.25,
   interactive = true,
   focusPoint = null,
+  codeThemed = false,
+  density = 'medium',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [orbs, setOrbs] = useState<Orb[]>([]);
@@ -44,12 +49,31 @@ const GlowingOrbs: React.FC<OrbProps> = ({
     width: typeof window !== 'undefined' ? window.innerWidth : 0,
     height: typeof window !== 'undefined' ? window.innerHeight : 0
   });
+  const [scrollY, setScrollY] = useState(0);
+
+  // Adjust count based on density
+  const getOrbCount = useCallback(() => {
+    switch (density) {
+      case 'low': return Math.floor(count * 0.6);
+      case 'high': return Math.floor(count * 1.5);
+      default: return count;
+    }
+  }, [count, density]);
 
   // Generate orbs on mount
   useEffect(() => {
+    const actualCount = getOrbCount();
     const newOrbs: Orb[] = [];
     
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < actualCount; i++) {
+      // For code-themed, add some square and diamond shapes
+      let type: 'circle' | 'square' | 'diamond' = 'circle';
+      if (codeThemed) {
+        const rand = Math.random();
+        if (rand > 0.7) type = 'square';
+        else if (rand > 0.4) type = 'diamond';
+      }
+      
       newOrbs.push({
         id: i,
         size: Math.random() * (maxSize - minSize) + minSize,
@@ -57,24 +81,42 @@ const GlowingOrbs: React.FC<OrbProps> = ({
         opacity: Math.random() * (maxOpacity - minOpacity) + minOpacity,
         left: Math.random() * 100,
         top: Math.random() * 100,
-        duration: Math.random() * 20 + 10,
+        duration: Math.random() * 15 + 15,
         delay: Math.random() * 5,
-        scale: 1
+        scale: 1,
+        type
       });
     }
     
     setOrbs(newOrbs);
-  }, [count, colors, minSize, maxSize, minOpacity, maxOpacity]);
+  }, [getOrbCount, colors, minSize, maxSize, minOpacity, maxOpacity, codeThemed]);
 
-  // Track mouse position and window size
+  // Track mouse position, window size, and scroll with throttling
   useEffect(() => {
     if (!interactive) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: e.clientX,
-        y: e.clientY
-      });
+    let mouseTimeoutId: NodeJS.Timeout;
+    let scrollTimeoutId: NodeJS.Timeout;
+    
+    const throttledMouseMove = (e: MouseEvent) => {
+      if (!mouseTimeoutId) {
+        mouseTimeoutId = setTimeout(() => {
+          setMousePosition({
+            x: e.clientX,
+            y: e.clientY
+          });
+          mouseTimeoutId = null as any;
+        }, 16); // ~60fps
+      }
+    };
+
+    const throttledScroll = () => {
+      if (!scrollTimeoutId) {
+        scrollTimeoutId = setTimeout(() => {
+          setScrollY(window.scrollY);
+          scrollTimeoutId = null as any;
+        }, 16);
+      }
     };
 
     const handleResize = () => {
@@ -84,16 +126,20 @@ const GlowingOrbs: React.FC<OrbProps> = ({
       });
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', throttledMouseMove);
     window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', throttledScroll);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', throttledMouseMove);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', throttledScroll);
+      clearTimeout(mouseTimeoutId);
+      clearTimeout(scrollTimeoutId);
     };
   }, [interactive]);
 
-  // Update orbs based on mouse position
+  // Update orbs based on mouse position and scroll
   useEffect(() => {
     if (!interactive || (!focusPoint && mousePosition.x === 0 && mousePosition.y === 0)) return;
     
@@ -106,7 +152,7 @@ const GlowingOrbs: React.FC<OrbProps> = ({
     
     // Calculate relative position within container
     const relativeX = point.x - rect.left;
-    const relativeY = point.y - rect.top;
+    const relativeY = point.y - rect.top + scrollY;
     
     setOrbs(prevOrbs => 
       prevOrbs.map(orb => {
@@ -119,12 +165,13 @@ const GlowingOrbs: React.FC<OrbProps> = ({
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         // Influence decreases with distance
-        const maxDistance = Math.max(rect.width, rect.height) * 0.5;
+        const maxDistance = Math.max(rect.width, rect.height) * 0.4;
         const influence = Math.max(0, 1 - distance / maxDistance);
         
-        // Apply subtle attraction/repulsion effect
-        const newLeft = orb.left + (dx > 0 ? -1 : 1) * influence * 0.2;
-        const newTop = orb.top + (dy > 0 ? -1 : 1) * influence * 0.2;
+        // Apply subtle attraction/repulsion effect - more subtle for code theme
+        const influenceFactor = codeThemed ? 0.1 : 0.15;
+        const newLeft = orb.left + (dx > 0 ? -1 : 1) * influence * influenceFactor;
+        const newTop = orb.top + (dy > 0 ? -1 : 1) * influence * influenceFactor;
         
         // Ensure orbs stay within bounds
         const boundedLeft = Math.max(0, Math.min(100, newLeft));
@@ -134,20 +181,22 @@ const GlowingOrbs: React.FC<OrbProps> = ({
           ...orb,
           left: boundedLeft,
           top: boundedTop,
-          scale: 1 + influence * 0.2,
-          opacity: orb.opacity + influence * 0.1
+          scale: 1 + influence * 0.15,
+          opacity: orb.opacity + influence * 0.08
         };
       })
     );
-  }, [mousePosition, focusPoint, interactive]);
+  }, [mousePosition, focusPoint, interactive, scrollY, codeThemed]);
 
   return (
-    <div className={`${styles.orbContainer} bg-syntaxual-background`} ref={containerRef}>
+    <div className={`${styles.orbContainer} ${codeThemed ? styles.codeThemed : ''}`} ref={containerRef}>
+      {codeThemed && <div className={styles.codeGrid}></div>}
+      
       <AnimatePresence>
         {orbs.map((orb) => (
           <motion.div
             key={orb.id}
-            className={`${styles.orb} syntaxual-orb syntaxual-glow`}
+            className={`${styles.orb} ${orb.type ? styles[orb.type] : ''} syntaxual-orb syntaxual-glow`}
             initial={{ 
               width: orb.size, 
               height: orb.size,
@@ -162,10 +211,11 @@ const GlowingOrbs: React.FC<OrbProps> = ({
               x: `${orb.left}%`,
               y: `${orb.top}%`,
               opacity: orb.opacity,
-              scale: orb.scale
+              scale: orb.scale,
+              rotate: orb.type === 'diamond' ? 45 : 0
             }}
             transition={{ 
-              duration: 0.8,
+              duration: 0.6,
               ease: "easeInOut"
             }}
             style={{
@@ -173,13 +223,22 @@ const GlowingOrbs: React.FC<OrbProps> = ({
               left: 0,
               top: 0,
               position: 'absolute',
-              borderRadius: '50%',
-              filter: 'blur(30px)',
-              transform: 'translate(-50%, -50%)',
+              borderRadius: orb.type === 'square' ? '4px' : '50%',
+              filter: `blur(${codeThemed ? 25 : 30}px)`,
+              transform: `translate(-50%, -50%) ${orb.type === 'diamond' ? 'rotate(45deg)' : ''}`,
             }}
           />
         ))}
       </AnimatePresence>
+      
+      {/* Code-themed elements */}
+      {codeThemed && (
+        <div className={styles.codeElements}>
+          <div className={styles.codeLine}></div>
+          <div className={styles.codeLine}></div>
+          <div className={styles.codeLine}></div>
+        </div>
+      )}
     </div>
   );
 };

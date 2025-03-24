@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import styles from './OrganicBackground.module.css';
 
@@ -8,66 +8,90 @@ interface OrganicBackgroundProps {
   children: React.ReactNode;
   className?: string;
   intensity?: 'low' | 'medium' | 'high';
+  codeThemed?: boolean;
 }
 
 const OrganicBackground: React.FC<OrganicBackgroundProps> = ({ 
   children, 
   className = '',
-  intensity = 'medium'
+  intensity = 'medium',
+  codeThemed = false
 }) => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [windowSize, setWindowSize] = useState({ 
     width: typeof window !== 'undefined' ? window.innerWidth : 0, 
     height: typeof window !== 'undefined' ? window.innerHeight : 0 
   });
+  const [scrollY, setScrollY] = useState(0);
+
+  // Handle mouse movement with throttling for performance
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    setMousePosition({
+      x: e.clientX,
+      y: e.clientY
+    });
+  }, []);
+
+  // Handle window resize
+  const handleResize = useCallback(() => {
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
+  }, []);
+
+  // Handle scroll position
+  const handleScroll = useCallback(() => {
+    setScrollY(window.scrollY);
+  }, []);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: e.clientX,
-        y: e.clientY
-      });
-    };
-
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
-
     // Initialize window size
     handleResize();
 
-    window.addEventListener('mousemove', handleMouseMove);
+    // Throttle mouse move events for better performance
+    let timeoutId: NodeJS.Timeout;
+    const throttledMouseMove = (e: MouseEvent) => {
+      if (!timeoutId) {
+        timeoutId = setTimeout(() => {
+          handleMouseMove(e);
+          timeoutId = null as any;
+        }, 16); // ~60fps
+      }
+    };
+
+    window.addEventListener('mousemove', throttledMouseMove);
     window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', throttledMouseMove);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [handleMouseMove, handleResize, handleScroll]);
 
-  // Calculate blob positions based on mouse movement
+  // Calculate blob positions based on mouse movement and scroll
   const getBlob1Style = () => {
-    const offsetX = (mousePosition.x / windowSize.width - 0.5) * 50;
-    const offsetY = (mousePosition.y / windowSize.height - 0.5) * 50;
+    const offsetX = (mousePosition.x / windowSize.width - 0.5) * 30;
+    const offsetY = (mousePosition.y / windowSize.height - 0.5) * 30 + (scrollY * 0.05);
     return {
       transform: `translate(${offsetX}px, ${offsetY}px)`
     };
   };
 
   const getBlob2Style = () => {
-    const offsetX = (mousePosition.x / windowSize.width - 0.5) * -40;
-    const offsetY = (mousePosition.y / windowSize.height - 0.5) * -40;
+    const offsetX = (mousePosition.x / windowSize.width - 0.5) * -25;
+    const offsetY = (mousePosition.y / windowSize.height - 0.5) * -25 - (scrollY * 0.03);
     return {
       transform: `translate(${offsetX}px, ${offsetY}px)`
     };
   };
 
   const getBlob3Style = () => {
-    const offsetX = (mousePosition.x / windowSize.width - 0.5) * 30;
-    const offsetY = (mousePosition.y / windowSize.height - 0.5) * 30;
+    const offsetX = (mousePosition.x / windowSize.width - 0.5) * 20;
+    const offsetY = (mousePosition.y / windowSize.height - 0.5) * 20 + (scrollY * 0.02);
     return {
       transform: `translate(${offsetX}px, ${offsetY}px)`
     };
@@ -76,24 +100,30 @@ const OrganicBackground: React.FC<OrganicBackgroundProps> = ({
   // Adjust opacity based on intensity
   const getOpacity = () => {
     switch (intensity) {
-      case 'low': return 0.2;
-      case 'high': return 0.5;
-      default: return 0.3;
+      case 'low': return 0.15;
+      case 'high': return 0.35;
+      default: return 0.25;
     }
   };
 
+  // Get code-themed class if enabled
+  const getCodeThemeClass = () => codeThemed ? styles.codeThemed : '';
+
   return (
-    <div className={`${styles.container} syntaxual-container ${className}`}>
+    <div className={`${styles.container} ${getCodeThemeClass()} syntaxual-container ${className}`}>
+      {/* Code-themed grid overlay for code sections */}
+      {codeThemed && <div className={styles.codeGrid}></div>}
+      
       <motion.div 
         className={`${styles.blob1} syntaxual-orb syntaxual-glow`}
         style={{ ...getBlob1Style(), opacity: getOpacity() }}
         initial={{ scale: 0.9 }}
         animate={{ 
-          scale: [0.9, 1.1, 0.95, 1.05, 0.9],
-          opacity: [getOpacity() - 0.1, getOpacity(), getOpacity() - 0.05, getOpacity()]
+          scale: [0.9, 1.05, 0.95, 1.02, 0.9],
+          opacity: [getOpacity() - 0.05, getOpacity(), getOpacity() - 0.03, getOpacity()]
         }}
         transition={{ 
-          duration: 20, 
+          duration: 25, 
           repeat: Infinity,
           repeatType: "reverse" 
         }}
@@ -103,11 +133,11 @@ const OrganicBackground: React.FC<OrganicBackgroundProps> = ({
         style={{ ...getBlob2Style(), opacity: getOpacity() }}
         initial={{ scale: 1 }}
         animate={{ 
-          scale: [1, 0.9, 1.05, 0.95, 1],
-          opacity: [getOpacity(), getOpacity() - 0.1, getOpacity(), getOpacity() - 0.05]
+          scale: [1, 0.95, 1.03, 0.97, 1],
+          opacity: [getOpacity(), getOpacity() - 0.05, getOpacity(), getOpacity() - 0.03]
         }}
         transition={{ 
-          duration: 25, 
+          duration: 30, 
           repeat: Infinity,
           repeatType: "reverse" 
         }}
@@ -117,11 +147,11 @@ const OrganicBackground: React.FC<OrganicBackgroundProps> = ({
         style={{ ...getBlob3Style(), opacity: getOpacity() }}
         initial={{ scale: 0.95 }}
         animate={{ 
-          scale: [0.95, 1.05, 0.9, 1, 0.95],
-          opacity: [getOpacity() - 0.05, getOpacity(), getOpacity() - 0.1, getOpacity()]
+          scale: [0.95, 1.03, 0.92, 1, 0.95],
+          opacity: [getOpacity() - 0.03, getOpacity(), getOpacity() - 0.05, getOpacity()]
         }}
         transition={{ 
-          duration: 22, 
+          duration: 28, 
           repeat: Infinity,
           repeatType: "reverse" 
         }}
