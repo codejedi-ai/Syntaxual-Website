@@ -5,6 +5,7 @@
 :root {
   --background: #181818;
   --accent: #800080;
+  --accent-secondary: #4b0082;
   --text-primary: #E0E0E0;
   --text-secondary: #A0A0A0;
 }
@@ -18,15 +19,27 @@
   overflow: hidden;
   pointer-events: none;
   z-index: -1;
+  background-color: var(--background);
 }
 
 .orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(30px);
-  animation: float 15s ease-in-out infinite;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 30px rgba(128, 0, 128, 0.5);
+  will-change: transform, opacity, filter;
+  transition: all 0.3s ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 30px rgba(128, 0, 128, 0.5);
+    filter: blur(30px);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(128, 0, 128, 0.7);
+    filter: blur(35px);
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(128, 0, 128, 0.5);
+    filter: blur(30px);
+  }
 }
 
 @keyframes float {
@@ -50,10 +63,16 @@
 @layer components {
   .syntaxual-orb {
     @apply rounded-full absolute opacity-30 blur-3xl;
+    animation: pulse 8s ease-in-out infinite;
   }
   
   .syntaxual-glow {
     @apply shadow-lg;
-    box-shadow: 0 0 30px rgba(128, 0, 128, 0.6);
+    box-shadow: 0 0 40px rgba(128, 0, 128, 0.6);
+    filter: blur(30px);
+  }
+  
+  .syntaxual-interactive {
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out, filter 0.3s ease-out;
   }
 }
