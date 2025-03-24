@@ -14,7 +14,7 @@ interface OrbProps {
 
 const GlowingOrbs: React.FC<OrbProps> = ({
   count = 15,
-  colors = ['#8a2be2', '#9370db', '#ba55d3', '#9932cc', '#4b0082'],
+  colors = ['var(--accent)', '#9370db', '#ba55d3', '#9932cc', '#4b0082'],
   minSize = 50,
   maxSize = 200,
   minOpacity = 0.1,
@@ -30,7 +30,7 @@ const GlowingOrbs: React.FC<OrbProps> = ({
     
     for (let i = 0; i < count; i++) {
       const orb = document.createElement('div');
-      orb.className = styles.orb;
+      orb.className = `${styles.orb} syntaxual-orb syntaxual-glow`;
       
       // Random properties
       const size = Math.random() * (maxSize - minSize) + minSize;
@@ -60,7 +60,7 @@ const GlowingOrbs: React.FC<OrbProps> = ({
   }, [count, colors, minSize, maxSize, minOpacity, maxOpacity]);
 
   return (
-    <div className={styles.orbContainer} ref={containerRef}>
+    <div className={`${styles.orbContainer} bg-syntaxual-background`} ref={containerRef}>
       {/* Orbs will be dynamically added here */}
     </div>
   );

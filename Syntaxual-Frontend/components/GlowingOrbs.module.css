@@ -1,3 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #181818;
+  --accent: #800080;
+  --text-primary: #E0E0E0;
+  --text-secondary: #A0A0A0;
+}
+
 .orbContainer {
   position: fixed;
   top: 0;
@@ -15,6 +26,7 @@
   filter: blur(30px);
   animation: float 15s ease-in-out infinite;
   transform: translate(-50%, -50%);
+  box-shadow: 0 0 30px rgba(128, 0, 128, 0.5);
 }
 
 @keyframes float {
@@ -32,5 +44,15 @@
   }
   100% {
     transform: translate(-50%, -50%) translateY(0) scale(1);
+  }
+}
+
+@layer components {
+  .syntaxual-orb {
+    @apply rounded-full absolute opacity-30 blur-3xl;
+  }
+  
+  .syntaxual-glow {
+    @apply shadow-[0_0_30px_rgba(128,0,128,0.6)];
   }
 }
