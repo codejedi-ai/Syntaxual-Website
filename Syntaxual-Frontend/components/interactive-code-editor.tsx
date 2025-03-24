@@ -57,7 +57,7 @@ def is_prime(n):
         return False;
     i = 5;
     while i * i <= n:
-        if n % i == 0 or n % (i + 2) == 0:
+        if n % i == 0 or n % (i + 2) == 0)
             return False;
         i += 6;
     return True;
@@ -260,6 +260,7 @@ export default function InteractiveCodeEditor() {
   const [code, setCode] = useState(languageOptions[0].sampleCode)
   const [language, setLanguage] = useState(languageOptions[0])
   const [analyzing, setAnalyzing] = useState(false)
+  const [analysisCompleted, setAnalysisCompleted] = useState(false)
   const [feedback, setFeedback] = useState<null | { issues: Array<{type: string, message: string, line?: number | null}> }>(null)
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -277,6 +278,7 @@ export default function InteractiveCodeEditor() {
       // Clear any previous feedback
       setFeedback(null)
       setError(null)
+      setAnalysisCompleted(false)
     }
   }
 
@@ -285,6 +287,7 @@ export default function InteractiveCodeEditor() {
     // Clear any previous feedback when code changes
     setFeedback(null)
     setError(null)
+    setAnalysisCompleted(false)
   }, [])
 
   const handleAnalyze = async () => {
@@ -295,93 +298,29 @@ export default function InteractiveCodeEditor() {
     
     try {
       setAnalyzing(true);
+      setAnalysisCompleted(false);
       setError(null);
       
-      // In a real implementation, this would send to your actual API endpoint
-      // const response = await fetch('/api/analyze-code', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     code,
-      //     language: language.value,
-      //   }),
-      // });
+      // Call the API endpoint
+      const response = await fetch('/api/analyze-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          language: language.value,
+        }),
+      });
       
-      // if (!response.ok) {
-      //   throw new Error('Failed to analyze code');
-      // }
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, simulate a response based on the language
-      let mockFeedback;
-      
-      if (language.value === 'javascript') {
-        mockFeedback = {
-          issues: [
-            {
-              type: 'Style',
-              message: 'Variable names should use camelCase according to IEEE standards',
-              line: 8
-            },
-            {
-              type: 'Grammar',
-              message: 'Missing semicolon at the end of statement',
-              line: 10
-            },
-            {
-              type: 'Documentation',
-              message: 'Functions should have descriptive comments following IEEE guidelines',
-              line: 2
-            }
-          ]
-        };
-      } else if (language.value === 'python') {
-        mockFeedback = {
-          issues: [
-            {
-              type: 'Style',
-              message: 'Function documentation should use Google docstrings format per IEEE recommendations',
-              line: 2
-            },
-            {
-              type: 'Documentation',
-              message: 'Main code should be protected with if __name__ == "__main__" guard',
-              line: 16
-            },
-            {
-              type: 'Standards',
-              message: 'Follow PEP 8 guidelines for consistent code style',
-              line: null
-            }
-          ]
-        };
-      } else {
-        mockFeedback = {
-          issues: [
-            {
-              type: 'Standards',
-              message: `Your ${language.label} code should follow ${language.label} IEEE style guidelines`,
-              line: null
-            },
-            {
-              type: 'Documentation',
-              message: 'All code sections should be properly documented',
-              line: 1
-            },
-            {
-              type: 'Style',
-              message: 'Consistent indentation should be maintained throughout the code',
-              line: null
-            }
-          ]
-        };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to analyze code');
       }
       
-      setFeedback(mockFeedback);
+      const data = await response.json();
+      setFeedback(data.feedback);
+      setAnalysisCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -417,7 +356,8 @@ export default function InteractiveCodeEditor() {
             disabled={analyzing}
             className="text-zinc-400 hover:text-white hover:bg-zinc-800"
           >
-            {analyzing ? <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-purple-500" /> : <Send size={16} />}
+            {analyzing ? <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-purple-500" /> : 
+              analysisCompleted ? <Check size={16} className="text-green-500" /> : <Send size={16} />}
             <span className="ml-2">Analyze</span>
           </Button>
         </div>
