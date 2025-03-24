@@ -53,6 +53,7 @@
   }
   
   .syntaxual-glow {
-    @apply shadow-[0_0_30px_rgba(128,0,128,0.6)];
+    @apply shadow-lg;
+    box-shadow: 0 0 30px rgba(128, 0, 128, 0.6);
   }
 }
