@@ -2,8 +2,6 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-
 export default function Navbar() {
   const pathname = usePathname()
 
@@ -36,11 +34,6 @@ export default function Navbar() {
             className={`${pathname === "/signin" ? "text-white" : "text-white/80"} hover:text-white transition-colors`}
           >
             Sign In
-          </Link>
-          <Link href="/get-started" className="hidden md:inline-block">
-            <Button variant="default" className="bg-purple-600 hover:bg-purple-700">
-              Get Started
-            </Button>
           </Link>
         </nav>
       </div>
